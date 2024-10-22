@@ -43,11 +43,14 @@ public class GameOfLife : MonoBehaviour
             }
         }
 
-        // gridElement.GetComponent<Transform>().localScale = new Vector3(, , );
-        // // gridElement.GetComponent<Transform>().rotation.Set(90, 270, 90, 0);
-        // for (int i = 0; i <= boardSize.x; i++) {
-        //     verticalGrid[i] = Instantiate(gridElement, new Vector3(i - boardSize.x / 2, 0, 0), Quaternion.identity);
-        // }
+        gridElement.GetComponent<Transform>().localScale = new Vector3(0.1f, 10, 1);
+        for (int i = 0; i <= boardSize.x; i++) {
+            verticalGrid[i] = Instantiate(gridElement, new Vector3(i - boardSize.x / 2, 0, 0), Quaternion.identity);
+        }
+        gridElement.GetComponent<Transform>().localScale = new Vector3(10, 0.1f, 1);
+        for (int i = 0; i <= boardSize.x; i++) {
+            horizontalGrid[i] = Instantiate(gridElement, new Vector3(0, i - boardSize.x / 2, 0), Quaternion.identity);
+        }
 
         // board[4, 4] = true;
         // board[4, 5] = true;
