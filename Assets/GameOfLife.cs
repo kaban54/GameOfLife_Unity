@@ -22,7 +22,6 @@ public class GameOfLife : MonoBehaviour
     private GameObject[] verticalGrid;
     private GameObject[] horizontalGrid;
     public bool gridEnabled;
-    public float randCoef;
     public int mode;
     private int curTeam;
     private Color[] colors;
@@ -72,6 +71,7 @@ public class GameOfLife : MonoBehaviour
         }
         gridEnabled = true;
         DisableGrid();
+        GenerateRandom();
     }
 
     private bool IsOnBoard(int x, int y) {
@@ -207,9 +207,10 @@ public class GameOfLife : MonoBehaviour
     public void GenerateRandom() {
         ClearBoard();
 
-        var n = (int)(boardSize.x * boardSize.y * randCoef);
-        if (mode == 1) n -= n % 2;
         var rand = new System.Random();
+        var k = (float)rand.Next(5, 40) / 100f;
+        var n = (int)(boardSize.x * boardSize.y * k);
+        if (mode == 1) n -= n % 2;
         while (n > 0) {
             var x = rand.Next(boardSize.x);
             var y = rand.Next(boardSize.y);
