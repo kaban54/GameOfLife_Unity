@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.VersionControl;
 using UnityEngine;
 
 public class GameOfLife : MonoBehaviour
@@ -15,7 +13,7 @@ public class GameOfLife : MonoBehaviour
     public float maxIterTime;
     private SpriteRenderer[,] spriteBoard;
     private GameObject[,] objBoard;
-    private bool[,] board;
+    private int[,] board;
     private bool paused;
     private float timeAcc;
     public GameObject gridElement;
@@ -24,6 +22,7 @@ public class GameOfLife : MonoBehaviour
     private GameObject[] horizontalGrid;
     public bool gridEnabled;
     public float randCoef;
+    public int mode;
     // Start is called before the first frame update
     void Start() {
         gameRef = this;
@@ -31,7 +30,7 @@ public class GameOfLife : MonoBehaviour
         objBoard = new GameObject[boardSize.x, boardSize.y];
         verticalGrid = new GameObject[boardSize.x + 1];
         horizontalGrid = new GameObject[boardSize.y + 1];
-        board = new bool[boardSize.x, boardSize.y];
+        board = new int[boardSize.x, boardSize.y];
         paused = true;
 
         for (int i = 0; i < boardSize.x; i++) {
@@ -39,7 +38,7 @@ public class GameOfLife : MonoBehaviour
                 var position = new Vector3(i - boardSize.x / 2f + 0.5f, j - boardSize.y / 2f + 0.5f, 0);
                 objBoard[i, j] = Instantiate(cellPrefab, position, Quaternion.identity);
                 spriteBoard[i, j] = objBoard[i, j].GetComponent<SpriteRenderer>();
-                board[i, j] = false;
+                board[i, j] = 0;
                 spriteBoard[i, j].enabled = false;
                 var cell = objBoard[i, j].GetComponent<Cell>();
                 cell.pos = new Vector2Int(i, j);
@@ -61,13 +60,14 @@ public class GameOfLife : MonoBehaviour
         return !(x < 0 || y < 0 || x >= boardSize.x || y >= boardSize.y);
     }
 
-    private int CountNeighbors (int x, int y) {
-        var ret = 0;
+    private Vector2Int CountNeighbors (int x, int y) {
+        var ret = new Vector2Int(0, 0);
         for (int i = -1; i <= 1; i++) {
             for (int j = -1; j <= 1; j++) {
                 if (i == 0 && j == 0) continue;
                 if (IsOnBoard(x + i, y + j)) {
-                    if (board[x + i, y + j]) ret++;
+                    if      (board[x + i, y + j] == 1) ret.x++;
+                    else if (board[x + i, y + j] == 2) ret.y++;
                 }
             }
         }
@@ -80,29 +80,49 @@ public class GameOfLife : MonoBehaviour
 
         while(timeAcc > iterTime) {
             timeAcc -= iterTime;
-            var nextboard = (bool[,]) board.Clone();
+            var nextboard = (int[,]) board.Clone();
             for (int i = 0; i < boardSize.x; i++) {
                 for (int j = 0; j < boardSize.y; j++) {
-                    var neigh = CountNeighbors(i, j);
-                    
-                    if (board[i, j]) {
-                        if (neigh < 2 || neigh > 3) nextboard[i, j] = false;
-                        else nextboard[i, j] = true;
+                    if (mode == 0) {
+                        var neigh = CountNeighbors(i, j).x;
+                        
+                        if (board[i, j] == 1) {
+                            if (neigh < 2 || neigh > 3) nextboard[i, j] = 0;
+                            else nextboard[i, j] = 1;
+                        }
+                        else {
+                            if (neigh == 3) nextboard[i, j] = 1;
+                            else nextboard[i, j] = 0;
+                        }
                     }
                     else {
-                        if (neigh == 3) nextboard[i, j] = true;
-                        else nextboard[i, j] = false;
+                        var neighVec = CountNeighbors(i, j);
+                        var neigh = neighVec.x + neighVec.y;
+                        
+                        if (board[i, j] != 0) {
+                            if (neigh < 2 || neigh > 3) nextboard[i, j] = 0;
+                            else nextboard[i, j] = board[i, j];
+                        }
+                        else {
+                            if (neigh == 3) {
+                                if (neighVec.x >= 2) nextboard[i, j] = 1;
+                                else                 nextboard[i, j] = 2;
+                            }
+                            else nextboard[i, j] = 0;
+                        }
                     }
                 }
             }
 
-            board = (bool[, ]) nextboard.Clone();
+            board = (int[, ]) nextboard.Clone();
         }
+
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
-                spriteBoard[i, j].enabled = board[i, j];
+                spriteBoard[i, j].enabled = (board[i, j] != 0);
             }
         }
+        if (mode == 1) SetColors();
     }
 
     // Update is called once per frame
@@ -116,8 +136,8 @@ public class GameOfLife : MonoBehaviour
     }
 
     public void ClickCell(int x, int y) {
-        board[x, y] = !board[x, y];
-        spriteBoard[x, y].enabled = board[x, y];
+        board[x, y] = 1 - board[x, y];
+        spriteBoard[x, y].enabled = (board[x, y] != 0);
     }
 
     public void EnableGrid() {
@@ -143,20 +163,35 @@ public class GameOfLife : MonoBehaviour
     private void GenerateRandom() {
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
-                board[i, j] = false;
+                board[i, j] = 0;
                 spriteBoard[i, j].enabled = false;
             }
         }
 
         var n = (int)(boardSize.x * boardSize.y * randCoef);
+        if (mode == 1) n -= n % 2;
         var rand = new System.Random();
         while (n > 0) {
             var x = rand.Next(boardSize.x);
             var y = rand.Next(boardSize.y);
-            if (!board[x, y]) {
-                board[x, y] = true;
+            if (board[x, y] == 0) {
+                if (mode == 0) board[x, y] = 1;
+                else           board[x, y] = n % 2 + 1;
                 spriteBoard[x, y].enabled = true;
                 n--;
+            }
+        }
+        if (mode == 1) SetColors();
+    }
+
+    private void SetColors() {
+        var col1 = new Color(255, 0, 0);
+        var col2 = new Color(0, 0, 255);
+        for (int i = 0; i < boardSize.x; i++) {
+            for (int j = 0; j < boardSize.y; j++) {
+                if (board[i, j] == 0) continue;
+                if (board[i, j] == 1) spriteBoard[i, j].color = col1;
+                else                  spriteBoard[i, j].color = col2;
             }
         }
     }

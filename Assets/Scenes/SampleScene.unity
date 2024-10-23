@@ -269,6 +269,7 @@ MonoBehaviour:
   bg: {fileID: 6418467784108709770, guid: eb2694166dfbbee4cb85f0535c22fa57, type: 3}
   gridEnabled: 0
   randCoef: 0.3
+  mode: 1
 --- !u!4 &1903263656
 Transform:
   m_ObjectHideFlags: 0
