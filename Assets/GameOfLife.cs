@@ -23,6 +23,7 @@ public class GameOfLife : MonoBehaviour
     private GameObject[] verticalGrid;
     private GameObject[] horizontalGrid;
     public bool gridEnabled;
+    public float randCoef;
     // Start is called before the first frame update
     void Start() {
         gameRef = this;
@@ -109,6 +110,7 @@ public class GameOfLife : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)) paused = !paused;
         if (Input.GetKeyDown(KeyCode.Z)) iterTime = Math.Min(maxIterTime, iterTime * 2f);
         if (Input.GetKeyDown(KeyCode.X)) iterTime = Math.Max(minIterTime, iterTime / 2f);
+        if (Input.GetKeyDown(KeyCode.R)) GenerateRandom();
 
         if (!paused) IterateGame();
     }
@@ -135,6 +137,27 @@ public class GameOfLife : MonoBehaviour
         }
         for (int i = 0; i <= boardSize.y; i++) {
             horizontalGrid[i].GetComponent<SpriteRenderer>().enabled = gridEnabled;
+        }
+    }
+
+    private void GenerateRandom() {
+        for (int i = 0; i < boardSize.x; i++) {
+            for (int j = 0; j < boardSize.y; j++) {
+                board[i, j] = false;
+                spriteBoard[i, j].enabled = false;
+            }
+        }
+
+        var n = (int)(boardSize.x * boardSize.y * randCoef);
+        var rand = new System.Random();
+        while (n > 0) {
+            var x = rand.Next(boardSize.x);
+            var y = rand.Next(boardSize.y);
+            if (!board[x, y]) {
+                board[x, y] = true;
+                spriteBoard[x, y].enabled = true;
+                n--;
+            }
         }
     }
 }
