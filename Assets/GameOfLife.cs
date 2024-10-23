@@ -9,7 +9,7 @@ public class GameOfLife : MonoBehaviour
 {
     public static GameOfLife gameRef;
     public Vector2Int boardSize;
-    public GameObject cube;
+    public GameObject cellPrefab;
     public float iterTime;
     public float minIterTime;
     public float maxIterTime;
@@ -19,8 +19,10 @@ public class GameOfLife : MonoBehaviour
     private bool paused;
     private float timeAcc;
     public GameObject gridElement;
+    public GameObject bg;
     private GameObject[] verticalGrid;
     private GameObject[] horizontalGrid;
+    public bool gridEnabled;
     // Start is called before the first frame update
     void Start() {
         gameRef = this;
@@ -34,7 +36,7 @@ public class GameOfLife : MonoBehaviour
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
                 var position = new Vector3(i - boardSize.x / 2f + 0.5f, j - boardSize.y / 2f + 0.5f, 0);
-                objBoard[i, j] = Instantiate(cube, position, Quaternion.identity);
+                objBoard[i, j] = Instantiate(cellPrefab, position, Quaternion.identity);
                 spriteBoard[i, j] = objBoard[i, j].GetComponent<SpriteRenderer>();
                 board[i, j] = false;
                 spriteBoard[i, j].enabled = false;
@@ -42,19 +44,16 @@ public class GameOfLife : MonoBehaviour
                 cell.pos = new Vector2Int(i, j);
             }
         }
-
-        gridElement.GetComponent<Transform>().localScale = new Vector3(0.1f, 10, 1);
+        bg.GetComponent<Transform>().localScale = new Vector3(boardSize.x, boardSize.y, 1);
+        Instantiate(bg, new Vector3(0, 0, 0), Quaternion.identity);
+        gridElement.GetComponent<Transform>().localScale = new Vector3(0.05f, boardSize.y, 1);
         for (int i = 0; i <= boardSize.x; i++) {
             verticalGrid[i] = Instantiate(gridElement, new Vector3(i - boardSize.x / 2, 0, 0), Quaternion.identity);
         }
-        gridElement.GetComponent<Transform>().localScale = new Vector3(10, 0.1f, 1);
+        gridElement.GetComponent<Transform>().localScale = new Vector3(boardSize.x, 0.05f, 1);
         for (int i = 0; i <= boardSize.x; i++) {
             horizontalGrid[i] = Instantiate(gridElement, new Vector3(0, i - boardSize.x / 2, 0), Quaternion.identity);
         }
-
-        // board[4, 4] = true;
-        // board[4, 5] = true;
-        // board[4, 6] = true;
     }
 
     private bool IsOnBoard(int x, int y) {
@@ -117,6 +116,26 @@ public class GameOfLife : MonoBehaviour
     public void ClickCell(int x, int y) {
         board[x, y] = !board[x, y];
         spriteBoard[x, y].enabled = board[x, y];
+    }
+
+    public void EnableGrid() {
+        gridEnabled = true;
+        for (int i = 0; i <= boardSize.x; i++) {
+            verticalGrid[i].GetComponent<SpriteRenderer>().enabled = gridEnabled;
+        }
+        for (int i = 0; i <= boardSize.y; i++) {
+            horizontalGrid[i].GetComponent<SpriteRenderer>().enabled = gridEnabled;
+        }
+    }
+
+    public void DisableGrid() {
+        gridEnabled = false;
+        for (int i = 0; i <= boardSize.x; i++) {
+            verticalGrid[i].GetComponent<SpriteRenderer>().enabled = gridEnabled;
+        }
+        for (int i = 0; i <= boardSize.y; i++) {
+            horizontalGrid[i].GetComponent<SpriteRenderer>().enabled = gridEnabled;
+        }
     }
 }
 
