@@ -8,6 +8,5 @@ public class Cell : MonoBehaviour
 
     void OnMouseDown() {
         GameOfLife.gameRef.ClickCell(pos.x, pos.y);
-        // Debug.Log("Cell Clicked");
     }
 }

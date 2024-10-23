@@ -27,8 +27,8 @@ public class CamController : MonoBehaviour
         if      (zoom ==  1) sz *= 1f + Time.deltaTime * zoomSpeed;
         else if (zoom == -1) sz /= 1f + Time.deltaTime * zoomSpeed;
         var mouseScroll = Input.mouseScrollDelta.y;
-        if      (mouseScroll < 0) sz *= 1f + mouseScroll * zoomSpeed * 0.05f;
-        else if (mouseScroll > 0) sz *= 1f + mouseScroll * zoomSpeed * 0.05f;
+        if      (mouseScroll < 0) sz *= 1f - mouseScroll * zoomSpeed * 0.05f;
+        else if (mouseScroll > 0) sz /= 1f + mouseScroll * zoomSpeed * 0.05f;
         if (sz < minSize) sz = minSize;
         if (sz > maxSize) sz = maxSize;
 

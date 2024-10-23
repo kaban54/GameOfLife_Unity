@@ -23,6 +23,8 @@ public class GameOfLife : MonoBehaviour
     public bool gridEnabled;
     public float randCoef;
     public int mode;
+    private int curTeam;
+    private Color[] colors;
     // Start is called before the first frame update
     void Start() {
         gameRef = this;
@@ -32,6 +34,10 @@ public class GameOfLife : MonoBehaviour
         horizontalGrid = new GameObject[boardSize.y + 1];
         board = new int[boardSize.x, boardSize.y];
         paused = true;
+        curTeam = 1;
+        colors = new Color[2];
+        colors[0] = new Color(255, 0, 0);
+        colors[1] = new Color(0, 0, 255);
 
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
@@ -131,12 +137,20 @@ public class GameOfLife : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Z)) iterTime = Math.Min(maxIterTime, iterTime * 2f);
         if (Input.GetKeyDown(KeyCode.X)) iterTime = Math.Max(minIterTime, iterTime / 2f);
         if (Input.GetKeyDown(KeyCode.R)) GenerateRandom();
+        if (Input.GetKeyDown(KeyCode.T) && mode == 1) curTeam = 3 - curTeam;
 
         if (!paused) IterateGame();
     }
 
     public void ClickCell(int x, int y) {
-        board[x, y] = 1 - board[x, y];
+        if (mode == 0) {
+            board[x, y] = 1 - board[x, y];
+        }
+        else {
+            if (board[x, y] == curTeam) board[x, y] = 0;
+            else                        board[x, y] = curTeam;
+            if (board[x, y] != 0) spriteBoard[x, y].color = colors[board[x, y] - 1];
+        }
         spriteBoard[x, y].enabled = (board[x, y] != 0);
     }
 
@@ -185,13 +199,10 @@ public class GameOfLife : MonoBehaviour
     }
 
     private void SetColors() {
-        var col1 = new Color(255, 0, 0);
-        var col2 = new Color(0, 0, 255);
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
                 if (board[i, j] == 0) continue;
-                if (board[i, j] == 1) spriteBoard[i, j].color = col1;
-                else                  spriteBoard[i, j].color = col2;
+                spriteBoard[i, j].color = colors[board[i, j] - 1];
             }
         }
     }
