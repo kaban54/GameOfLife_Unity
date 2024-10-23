@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class GameOfLife : MonoBehaviour
@@ -25,6 +26,9 @@ public class GameOfLife : MonoBehaviour
     public int mode;
     private int curTeam;
     private Color[] colors;
+    public bool clickable;
+    public Canvas score;
+    public int[] scoreCount;
     // Start is called before the first frame update
     void Start() {
         gameRef = this;
@@ -35,9 +39,15 @@ public class GameOfLife : MonoBehaviour
         board = new int[boardSize.x, boardSize.y];
         paused = true;
         curTeam = 1;
-        colors = new Color[2];
-        colors[0] = new Color(255, 0, 0);
-        colors[1] = new Color(0, 0, 255);
+        colors = new Color[3];
+        colors[0] = new Color(255, 255, 255);
+        colors[1] = new Color(255, 0, 0);
+        colors[2] = new Color(0, 0, 255);
+        clickable = true;
+        mode = 0;
+        scoreCount = new int[3];
+        scoreCount[1] = 0;
+        scoreCount[2] = 0;
 
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
@@ -60,6 +70,8 @@ public class GameOfLife : MonoBehaviour
         for (int i = 0; i <= boardSize.x; i++) {
             horizontalGrid[i] = Instantiate(gridElement, new Vector3(0, i - boardSize.x / 2, 0), Quaternion.identity);
         }
+        gridEnabled = true;
+        DisableGrid();
     }
 
     private bool IsOnBoard(int x, int y) {
@@ -83,8 +95,9 @@ public class GameOfLife : MonoBehaviour
 
     private void IterateGame() {
         timeAcc += Time.deltaTime;
-
         while(timeAcc > iterTime) {
+            var count1 = 0;
+            var count2 = 0;
             timeAcc -= iterTime;
             var nextboard = (int[,]) board.Clone();
             for (int i = 0; i < boardSize.x; i++) {
@@ -117,11 +130,15 @@ public class GameOfLife : MonoBehaviour
                             else nextboard[i, j] = 0;
                         }
                     }
+                    if      (nextboard[i, j] == 1) count1++;
+                    else if (nextboard[i, j] == 2) count2++;
                 }
             }
-
+            scoreCount[1] = count1;
+            scoreCount[2] = count2;
             board = (int[, ]) nextboard.Clone();
         }
+
 
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
@@ -136,20 +153,23 @@ public class GameOfLife : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Space)) paused = !paused;
         if (Input.GetKeyDown(KeyCode.Z)) iterTime = Math.Min(maxIterTime, iterTime * 2f);
         if (Input.GetKeyDown(KeyCode.X)) iterTime = Math.Max(minIterTime, iterTime / 2f);
-        if (Input.GetKeyDown(KeyCode.R)) GenerateRandom();
+        if (Input.GetKeyDown(KeyCode.R)) ClearBoard();
+        if (Input.GetKeyDown(KeyCode.G)) GenerateRandom();
+        if (Input.GetKeyDown(KeyCode.M)) SwitchMode();
         if (Input.GetKeyDown(KeyCode.T) && mode == 1) curTeam = 3 - curTeam;
 
         if (!paused) IterateGame();
     }
 
     public void ClickCell(int x, int y) {
+        if (!clickable) return;
         if (mode == 0) {
             board[x, y] = 1 - board[x, y];
         }
         else {
             if (board[x, y] == curTeam) board[x, y] = 0;
             else                        board[x, y] = curTeam;
-            if (board[x, y] != 0) spriteBoard[x, y].color = colors[board[x, y] - 1];
+            if (board[x, y] != 0) spriteBoard[x, y].color = colors[board[x, y]];
         }
         spriteBoard[x, y].enabled = (board[x, y] != 0);
     }
@@ -174,13 +194,18 @@ public class GameOfLife : MonoBehaviour
         }
     }
 
-    private void GenerateRandom() {
+    public void ClearBoard() {
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
                 board[i, j] = 0;
                 spriteBoard[i, j].enabled = false;
+                spriteBoard[i, j].color = colors[0];
             }
         }
+    }
+
+    public void GenerateRandom() {
+        ClearBoard();
 
         var n = (int)(boardSize.x * boardSize.y * randCoef);
         if (mode == 1) n -= n % 2;
@@ -202,9 +227,16 @@ public class GameOfLife : MonoBehaviour
         for (int i = 0; i < boardSize.x; i++) {
             for (int j = 0; j < boardSize.y; j++) {
                 if (board[i, j] == 0) continue;
-                spriteBoard[i, j].color = colors[board[i, j] - 1];
+                spriteBoard[i, j].color = colors[board[i, j]];
             }
         }
+    }
+
+    public void SwitchMode() {
+        mode = 1 - mode;
+        ClearBoard();
+        if (mode == 1) score.enabled = true;
+        else score.enabled = false;
     }
 }
 
